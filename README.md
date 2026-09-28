@@ -6,13 +6,17 @@ on an **Intensity vs. Verification Confidence** framework, and stores
 everything in a database — SQLite by default (zero setup), MySQL if
 you switch to it later.
 
+### 🚀 Live Demo
+
+**[View the GreenCheck Dashboard](https://greencheck-by.streamlit.app/)**
+
 This version was built step-by-step, testing each piece against real
 live data before formalizing it into reusable files — so every design
 choice below has a reason you've already seen play out.
 
 ## How it works
 
-```
+```text
 Shopify /products.json  --->  scraper/store_scraper.py
                                       |
                                       v
@@ -26,12 +30,13 @@ Shopify /products.json  --->  scraper/store_scraper.py
 ```
 
 **The scoring framework:**
-- **Intensity** — how strong/absolute the claim's language is
+
+* **Intensity** — how strong/absolute the claim's language is
   ("100% recycled" vs. "partially recycled")
-- **Verification Confidence** — how much real evidence backs it
+* **Verification Confidence** — how much real evidence backs it
   (recognized certifications like GOTS, Fair Trade, B Corp; specific
   checkable numbers)
-- **Greenwash Risk** = Intensity × (1 − Verification Confidence / 100)
+* **Greenwash Risk** = Intensity × (1 − Verification Confidence / 100)
   — a bold, unproven claim scores high risk; a bold, well-certified
   claim scores low risk.
 
@@ -83,22 +88,30 @@ python tests/test_scorer.py
 ## Switching to MySQL later
 
 Change one line in `.env`:
-```
+
+```text
 DATABASE_URL=mysql+mysqlconnector://user:password@localhost:3306/greencheck
 ```
-then `pip install mysql-connector-python`. Nothing else in the code
-changes — `db_utils.py` was written against SQLAlchemy specifically so
-this swap is trivial once you're ready to set up a MySQL server.
+
+then:
+
+```bash
+pip install mysql-connector-python
+```
+
+Nothing else in the code changes — `db_utils.py` was written against
+SQLAlchemy specifically so this swap is trivial once you're ready to
+set up a MySQL server.
 
 ## Project layout
 
-```
+```text
 greencheck-v2/
 ├── config/settings.py       # env-driven configuration
 ├── scraper/store_scraper.py # Shopify /products.json scraper, any store
 ├── db/schema.sql            # table + view definitions
 ├── db/db_utils.py           # SQLAlchemy data-access layer (upsert-safe)
-├── scoring/scorer.py        # Intensity / Verification / Risk scoring
+├── scoring/scorer.py         # Intensity / Verification / Risk scoring
 ├── tests/test_scorer.py     # unit tests, incl. regression test
 ├── main.py                  # CLI pipeline orchestrator
 ├── requirements.txt
@@ -107,15 +120,15 @@ greencheck-v2/
 
 ## What each design choice fixes (things we hit and fixed live)
 
-- **`shopify_id` is `UNIQUE`** — without this, re-running the pipeline
+* **`shopify_id` is `UNIQUE`** — without this, re-running the pipeline
   creates duplicate rows for the same product every time (this
   happened during development — confirmed and fixed).
-- **`if not claim_text: skip`** — some products (like a store's
+* **`if not claim_text: skip`** — some products (like a store's
   internal "Partial Payment" utility product) have `body_html: null`.
   Scoring empty text as a real claim would be meaningless.
-- **`html.parser` instead of `lxml`** for BeautifulSoup — `lxml` needs
+* **`html.parser` instead of `lxml`** for BeautifulSoup — `lxml` needs
   a C compiler to install on some Windows setups; `html.parser` is
   built into Python and needs nothing extra.
-- **`?` placeholders / SQLAlchemy `text()` params, never f-strings**
+* **`?` placeholders / SQLAlchemy `text()` params, never f-strings**
   in SQL — protects against SQL injection from scraped text you don't
   control.
