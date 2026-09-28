@@ -1,0 +1,5 @@
+requests==2.32.3
+beautifulsoup4==4.12.3
+SQLAlchemy==2.0.31
+python-dotenv==1.0.1
+tenacity==8.5.0
